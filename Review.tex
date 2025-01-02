@@ -1,0 +1,31 @@
+\documentclass[11pt]{article}
+\usepackage{style}
+
+\usepackage{MyNotations}
+\usepackage{subfiles}
+
+\begin{document}
+\begin{center}
+    \LARGE\textbf{Dislocation dynamics and phase field crystal \\ A brief overview}
+    \\
+    \vspace{0.5cm}
+    \normalsize
+    Aymane Graini,  Manas V. Upadhyay \\
+    \vspace{0.5cm}
+    $^*$\textit{Laboratoire de Mécanique des Solides (LMS), École Polytechnique}\\
+    07 November 2024 \\\vspace{0.5cm}
+    % \footnotesize{\underline{Aymane.Graini@polytechnique.edu}}
+\end{center}
+\normalsize
+\tableofcontents
+\newpage
+\subfile{Intro.tex}
+\newpage
+\subfile{dislocations.tex}
+\newpage
+\subfile{PFC.tex}
+\subfile{FDM.tex}
+\subfile{numerics.tex}
+\clearpage
+\printbibliography[heading=bibintoc,title={Bibliography}]
+\end{document}

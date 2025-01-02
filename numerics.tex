@@ -1,0 +1,18 @@
+\documentclass{article}
+\usepackage{style}
+\usepackage{MyNotations}
+\begin{document}
+
+
+\section{Finite element implementation of the coupled model}
+\subsection{Weak coupling under periodic boundary conditions}
+\subsubsection{Swif-Hohenberg equation}
+We recall that \textit{Swift-Hohenberg equation} is a non-linear fourth order partial differential equation, defined as :
+\begin{equation}
+   \frac{\partial \psi}{\partial t} = - \Gamma \frac{\delta \mathcal{F}}{\delta \psi} = - \Gamma \left[ \psi + f'(\psi) + \Delta^2 \psi +2 \Delta \psi  \right] \quad \text{with} \quad f(\psi) = -\frac{\epsilon}{2} \psi^2 - \frac{g}{3}\psi^3 + \frac{1}{4} \psi^4
+\end{equation}
+Several numerical methods have been proposed in the literature, trying to build a thermodynamically consistent and energy stable schemes while optimizing the computational costs.
+It is well known that a forward explicit euler scheme is unstable if the CFL-like conditions are not met $(\Delta t\sim < \Delta x^4)$. For this reason, a first semi-implicit method was proposed in \cite{chengEfficientAlgorithmSolving2008}, then this method was enhanced in \cite{elseySimpleEfficientScheme2013} where the authors added a stabilizing term to enforce energy stability. Following this, a second order Crank-Nicolson scheme was suggested in \cite{gomezNewSpaceTime2012} in combination with a Newton-Raphson method to adress the non linear scheme. Moreover, to deal with the non-linear term, different operator splitting methods were proposed, such as first and second order convex splitting \cite{huStableEfficientFinitedifference2009}. Finally, we refer to spectral method used in conjunction with these splitting methods (e.g \cite{leeSemianalyticalFourierSpectral2017}) and pseudo-spectral studied in \cite{zhaiStabilityErrorEstimate2021}.\\
+
+In what comes next, we follow the finite elements scheme suggested in \cite{qiNumericalAnalysisSecondorder2024}, based on the classically used mixed formulation of fourth order partial differential equations.
+\end{document}
