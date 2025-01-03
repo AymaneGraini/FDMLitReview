@@ -13,7 +13,7 @@ We recall that \textit{Swift-Hohenberg equation} is a non-linear fourth order pa
 \end{equation}
 Several numerical methods have been proposed in the literature, trying to build a thermodynamically consistent and energy stable schemes while optimizing the computational costs.
 It is well known that a forward explicit euler scheme is unstable if the CFL-like conditions are not met $(\Delta t\sim < \Delta x^4)$. For this reason, a first semi-implicit method was proposed in \cite{chengEfficientAlgorithmSolving2008}, then this method was enhanced in \cite{elseySimpleEfficientScheme2013} where the authors added a stabilizing term to enforce energy stability. Following this, a second order Crank-Nicolson scheme was suggested in \cite{gomezNewSpaceTime2012} in combination with a Newton-Raphson method to adress the non linear scheme. Moreover, to deal with the non-linear term, different operator splitting methods were proposed, such as first and second order convex splitting \cite{huStableEfficientFinitedifference2009}. Finally, we refer to spectral method used in conjunction with these splitting methods (e.g \cite{leeSemianalyticalFourierSpectral2017}) and pseudo-spectral studied in \cite{zhaiStabilityErrorEstimate2021}.
-In what comes next, we follow the finite elements scheme suggested in \cite{qiNumericalAnalysisSecondorder2024}, based on the classically used mixed formulation of fourth order partial differential equations.\\
+In what comes next, we follow the finite elements scheme suggested in \cite{qiNumericalAnalysisSecondorder2024}, based on the classically used mixed formulation of fourth order partial differential equations. We argue that, the mixed formulation is the simplest way to solve fourth order PDEs weakly without the need to use high order $H^2$ elements, non-conformal and penalty methods. \marginpar{Add refs}\\
 
 We consider a domain $\Omega$ with a given triangulation $\mathcal{T}_h$ such that $\Omega = \bigcup_{U \in \mathcal{T}_h} U$ with $h$ being the maximal length of the triangles. We consider the scalar finite element element functional space $V_h^q$ defined as:
 \begin{equation}
@@ -53,7 +53,6 @@ Find $\chi_h=(\psi_h,\omega_h)\in (V^q_h)^2$, such that :
 With known initial conditions $\psi_h^{t=0}$ and $\omega_h^{t=0}$.
 \end{mybox}
 The existence and uniquess of a solution for this semi-discretized scheme was proven in \cite{qiNumericalAnalysisSecondorder2024} using galerkin spectral method. In addition, the author studied and demonstrated the convergence of the scheme for $\mathcal{P}_1$ and $\mathcal{P}_2$ polynomial spaces.
-\newpage
 In order to introduce the fully discrete scheme, we use \emph{Crank-Nicolson} method to treat the time derivatives. An explicit Eulers scheme would require a time step roughly $dt<dx^4$, whereas a CN scheme is known for it's second order stability and allows for larger timesteps.
 
 \begin{mybox}{}
@@ -82,7 +81,7 @@ Within a finite-element approximation, we can assemble from the previous system 
 \end{equation}
 Which utimately defines a reccurent sequence to be iterated until convergence critereon is reached as determined by a given tolerance.
 \subsubsection{Mechanical problem}
-We recall that in this section we solve a uncoupled FDM-PFC model in which the evolution the evolution of the scalar field $\psi$ is independent of Mechanical state and is solely prescribed by the SH equation \cref{eq:SH4th}. As introduced in \cite{upadhyayCouplingPhase2024}, the scalar field $\psi$ can be used to extract a dislocation density tensor $\alpha$ which will be used to solve the Mechanical problem. In fact, within the weakly non linear region with $|\varepsilon|<\!<1$, the order parameter $\psi$ can be expanded in terms of the slow varying amplitudes of the resonant modes $\vecc{q_n}$ (\cite{skaugenDislocationdynamics2018}). We can write:
+We recall that in this section we solve a uncoupled FDM-PFC model in which the evolution the evolution of the scalar field $\psi$ is independent of Mechanical state and is solely prescribed by the SH equation \cref{eq:SH4th}. As introduced in \cite{upadhyayCouplingPhaseField2024}, the scalar field $\psi$ can be used to extract a dislocation density tensor $\alpha$ which will be used to solve the Mechanical problem. In fact, within the weakly non linear region with $|\varepsilon|<\!<1$, the order parameter $\psi$ can be expanded in terms of the slow varying amplitudes of the resonant modes $\vecc{q_n}$ (\cite{skaugenDislocationdynamics2018}). We can write:
 \begin{equation}
    \psi(\vecc{r},t) = \psi_0 + \sum_{n=1}^{N} A_n(\vecc{r},t) e^{i \vecc{q_n}\cdot \vecc{r}}+ c.c
 \end{equation}
@@ -120,7 +119,7 @@ The incompatible distortion $\Tens{U^\perp}$ is found by solving a \emph{Poisson
 \begin{equation}
    \nabla^2 \Tens{U^\perp} = - \nabla \times \Tens \alpha
 \end{equation}
-Under periodic assumptions, this can be simply solved by a spectral method (see \cite{upadhyayCouplingPhase2024}), with $\Tens{\tilde{\alpha}}= \mathcal{F}(\mathcal{\Tens \alpha})$ the Fourrier transform of the dislocation density tensor $\Tens \alpha$:
+Under periodic assumptions, this can be simply solved by a spectral method (see \cite{upadhyayCouplingPhaseField2024}), with $\Tens{\tilde{\alpha}}= \mathcal{F}(\mathcal{\Tens \alpha})$ the Fourrier transform of the dislocation density tensor $\Tens \alpha$:
 \begin{equation}
    \Tens{U^\perp} = \mathcal{F}^{-1}\left(
       \begin{cases}
@@ -159,7 +158,7 @@ The previously introduced numerical schee is implemented on the opensource FEM s
 \RestyleAlgo{ruled}
 \begin{algorithm}[H]
    \caption{Uncoupled PFC-FDM model}\label{alg:UncoupledPFCFDM}
-   \KwData{$\Omega,dx,dy,dt,\mathbb{C},\psi(t=0),g,\varepsilon,tol$}
+   \KwData{$\Omega,dx,dy,dt,\mathbb{C},\psi(t=0),\overline{\psi},g,\varepsilon,tol$}
    \KwResult{$\Tens Q$,$\Tens U$,$\Tens{\sigma^Q}$,$\Tens \sigma$}
    $t \gets 0$ \;
    $\psi^0_h \gets \psi(t=0)$\;
@@ -177,15 +176,78 @@ The previously introduced numerical schee is implemented on the opensource FEM s
          $res \gets ||F(\left(\chi^{t+dt}_h\right)_{k+1})|| $ \;
          $k \gets k+1$\;
       }
-      $(\psi^{t}_h,\omega^{t}_h) \gets \left(\chi^{t+dt}_h\right)_{k}  $\;
+      $(\psi^{t+dt}_h,\omega^{t+dt}_h) \gets \left(\chi^{t+dt}_h\right)_{k}  $\;
+      
+      \textcolor{red}{$C \gets  \overline{\psi}- \frac{1}{|\Omega|}\int \psi dxdy$\;}
+      \textcolor{red}{$\psi^{t+dt}_h  \gets \psi^{t+dt}_h +C$\;}
       $A_n^{t+dt} \gets$ ??\;
       $\Tens{Q^{t+dt}} \gets$ ??\;
       $\Tens{\sigma^Q} \gets$ ??\;
       $\overline{\Tens{\alpha}}^{t+dt} \gets $ RHS of \cref{eq:uncoupledalpha}\;
       $\Tens{\alpha}^{t+dt} \gets \overline{\Tens{\alpha}}^{t+dt}$ \;
+      $\Tens{U^\perp}^{t+dt} \gets \dots^{t+dt}$ \;
+      $\Tens{U^\parallel}^{t+dt} \gets \dots^{t+dt}$ \;
+      $\Tens{\sigma}^{t+dt} \gets \dots^{t+dt}$ \;
      $t \gets t+dt$\;
    }
 \end{algorithm}
+\subsubsection{Numerical validation}
+We consider in this section the generalized SH functional with parameters $r$ and $g$. We follow the procedure explained  \cite{elderModelingelastic2004}, and we look for a triangular lattice state energy minimizers.
+\begin{equation}
+   \psi(x,y)=\psi_0+ A \left[ \cos(y)+ \cos\left( \frac{\sqrt{3}}{2}x -\frac{1}{2}y \right) +\cos\left( \frac{\sqrt{3}}{2}x +\frac{1}{2}y \right) \right]
+\end{equation}
+We recall that our model is based on the unconserved dynamics, which means that the average value $\psi_0$ is a free variable. The total free energy functional of the system becomes a two variable function. By excplicitly integrating the energy density, we write:
+\begin{equation}
+   \mathcal{F}[\psi] = \hat{\mathcal{F}}(A,\psi_0)
+\end{equation}
+For a given couple of parameters $(r,g)$, minimizing the function $\hat{\mathcal{F}}$ w.r.t to both variables yields two extrmums: a homogeneous state and a hexagonal state. The energy landscape is illustrated in the following \cref{fig:SH_Gen_Landscape}. Using numerical minimization, we find the values of $(A,\psi_0)$ that yield the desired lattice state.
+\begin{figure}[H]
+   \centering
+   \includegraphics[width=0.5\textwidth]{imgs/weakcoupling/dipole/Energy.png}
+   \caption{Two variable-energy landscape in the generalized SH model, with $g=1$ and $\varepsilon=0.2$. The red dot indicates the hexagonal state.}\label{fig:SH_Gen_Landscape}
+\end{figure}
+In order to test our numerical implementation, we initial a random noise around the presvisouly found average $\psi_0$ and close to the triangular state. A correct implementation should demonstrate an evolution by gradient descent of the system towards the crstyalling state. The results are illustrated in \cref{fig:SH_Gen_Noise} where we plot the average value of the order parameter, the total energy of the sytem and the $L^2$-norm of the difference between the current state and the exact solution of a hexagonal lattice $||\psi_t-\psi_{exact}||_2$ to which the system ultimately converges. The average value, even if initialized at the value corresponding to the minimum, is not kept constant throught the simulation. It drops and then raises back to stabilize around the minimum. The total energy of the system is a dreasing function in time, toward the theoretical prediction showed in dashed line. In addition, the $L^2$-norm decreases monotonically towards 0.
+\begin{figure}[H]
+   \centering
+   \includegraphics[width=0.77\textwidth]{imgs/weakcoupling/dipole/validationNoise.png}
+   \caption{Two variable-energy landscape in the generalized SH model, with $g=1$ and $\varepsilon=0.2$. The red dot indicates the hexagonal state.}\label{fig:SH_Gen_Noise}
+\end{figure}
+We must highlight at this stage that we are using a generalized SH model with an additional cubic term $\psi^3$ guaranteed by picking $g \neq 0$ which differs from the classical SH/Brasovskii functional. The presence of a cubic term breaks the symmetry $\psi \longleftrightarrow -\psi$ which is a necessary condition for pattern selection to yield a crystal state within the unconserved dynamics evolution (see \cite{crossPatternFormation2009}). The cubic term can be dropped when using conserved dynamics.
+\subsubsection{Localized states in the generalized model}
+Even though the generalized model can showcase crytalline states with a non-conserved average, the main the limitation (i ddidn't know beforehand and i had to implement it to see that) is the possibility of developping localized stripe states within a crystal with annihilate all our topological defect paradigm. To illustrate this phenomena, we consider a perfect hexgonal lattice built using 3 resonant wave vectors exactly like we explain in the following section. In addition, we artificially seed an edge dislocation and let the system relax using the non conserved dynamics.
+\begin{figure}[H]
+   \centering
+   \includegraphics[width=0.77\textwidth]{imgs/weakcoupling/dipole/localization.png}
+   \caption{Degeneration of seeded dislocation into a localized strip state in the generalized Swift-Hohenberg model with unconserved dynamics.}\label{fig:localization}
+\end{figure}
+As we illustrated in \cref{fig:localization}, the evolution of the scalar field using the non conservred dynamics degenerates into a localized strip state that evolves in time. This effects, when using a generalized SH equation, has been predicted and well studied (\cite{thieleLocalizedStatesConserved2013} \cite{burkeLocalizedStatesGeneralized2006}). Due to localized stripping, dislocation is lost and the model cannot be used to study their motion and Mechanical properties.\\
+
+
+As a conclusion, we drop in the what follows and until otherwise said, the cubic term in the generalized model and work with the classical model $(g=0)$. Hence, the only way to obtain crystal state is to use a consrved dynamic evolution. The issue with this evolution equation is the presence of a sixth order spatial derivative difficult to deal with from a finite-element paradigm. Alternatives consist of using classical Lagrange multipliers to enforce average conservation or space-times dependent Lagrange multipliers (\cite{leeNewConservativeSwift2020}). Coupling phase field models with elasticity while ensuring mass conservation has been a classical question at the intersection of condensed matter physics and mechanics, a review of possible ways of coupling is presented in \cite{bartelsCahnHilliardPhase2021} \marginpar{analyze ref}. This topic was classically tackeled through coupling Cahn-Hillard with elasticity, Cahn-Hillard being the the mass-conserving version of Allen-Cahn model. (The relationship between both is the same as the one we are interested in). 
+\begin{mybox}
+In what follows we set $g=0$ (classical \emph{Swift-Hohenberg}). Our main issue is not mass conservation but ratehr coupling the two theories. Thus, we use a simple method to enforce mass conservation: The unconserved equation is used, keeping a fourth order pde and the scalar field is updated at each time step by adding a correction. This the step in highligheted in red in \cref{alg:UncoupledPFCFDM}.
+\end{mybox}
+
+\subsubsection{Relaxation of a stable dislocation dipole}
+As a benchmark case we study the relaxation of a dislocation dipole in a 2d hexgonal lattice, as performed in \cite{upadhyayCouplingPhaseField2024}. The considered domain is a rectangular domain with sides $L=N_x dx$ and $H=N_y dy$. The grid spacing is chosen in order to have around 6 grid points around each "atom" (atoms are located at the maximums of the order parameter $\psi$ ); we chose $dx=a_0/7$, $dy=\sqrt{3}a_0/12$ where $a_0$ is the lattice parameter. Finally, we pick $N_x=602$ and $N_y=900$.\\
+A hexgonal lattice is using $N=3$ wave vectors. Within the single mode approximation, we write:
+\begin{equation}
+   \psi(\vecc{r}) = \psi_0 +  A_0\sum_{n=1}^{2N}e^{i\vecc{q^n}\cdot \vecc r}
+\end{equation}
+With $\vecc{q^1}=(0,1)$, $\vecc{q^2}=(\sqrt{3}/2,-1/2)$, $\vecc{q^3}=(-\sqrt{3}/2,-1/2)$, $\vecc{q^4}=-\vecc{q^1}$,$\vecc{q^5}=-\vecc{q^2}$, $\vecc{q^6}=-\vecc{q^3}$. Minimizing the \emph{Swift-Hohenberg} energy functional yields an expression for $A_0$, \cite{elderModelingelastic2004}:
+\begin{equation}
+   A_0 = \frac{1}{5} \left(|\psi_0|+\frac{1}{3} \sqrt{15\varepsilon-36 \psi_0^2} \right)
+\end{equation}
+The phase diagram parameters $(\varepsilon,\psi_0)$ are chosen, in our case, to fall within the hexgonal lattice region: $\varepsilon=1.2$ and $\psi_0=-0.5$. Finally, we insert $p$ edge dislocations located at $(x_p,y_p)$ with a \emph{Burgers} vector $\vecc{b_p}$ by adding a shift to the phase of the scalar field $\psi$:
+\begin{equation}
+   \psi(\vecc{r}) = \psi_0 +  A_0\sum_{n=1}^{2N}\exp \left[ i \left(\vecc{q^n}\cdot \vecc r+ \sum_{p=1}^{2}s^{n,p} \arctan \left(\frac{y-y_p}{x-x_p}\right)\right) \right]
+\end{equation}
+The parameter $s^{n,p}= \frac{1}{2\pi}\vecc{q^n} \cdot \vecc{b^p}$ is the winding number. A dislocation dipole with opposite charge is intialized by setting $p=2$. The first dislocation located at $(x_1,y_1)=(L/2,3H/8)$ has a Burgers vector $\vecc{b^1}=(a_0,0)$, the second located at $(x_1,y_1)=(L/2,5H/8)$ has an opposite Burgers vector $\vecc{b^2}=(-a_0,0)$.
+\begin{figure}[H]
+   \centering
+   \includegraphics[width=0.9\textwidth]{imgs/weakcoupling/dipole/dipoleinit.png}
+   \caption{Illustration of the initial configuration $(t=0)$ of an oppositely charged dislocation dipole. Colorbars indicate values of the order parameter $\psi$.}
+\end{figure}
 
 \end{document}
 
