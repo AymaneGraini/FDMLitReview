@@ -2,11 +2,13 @@
 \usepackage{bm}
 \usepackage{amsmath}
 \usepackage{amsfonts}
+\usepackage{amssymb}
 \usepackage{mathtools}
+\usepackage{algorithm2e}
 \usepackage{bigints}
 \usepackage{geometry}
 \usepackage{colortbl}
-
+\usepackage[most]{tcolorbox}
 \usepackage[T1]{fontenc}
 \usepackage[mathscr]{euscript}
 % \usepackage[libertine]{newtxmath}
@@ -46,3 +48,14 @@
 \definecolor{Yescell}{HTML}{c0edc3}
 \definecolor{Nocell}{HTML}{ffc9c9}
 \definecolor{Mcell}{HTML}{ffe1c9}
+\definecolor{grey}{HTML}{eaeaea}
+
+
+\newtcolorbox{mybox}[1][]
+{
+  colframe = black,
+  colback  = grey,
+  coltitle = black,  
+  title    = {#1},
+  #1,
+}

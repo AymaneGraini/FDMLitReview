@@ -8,11 +8,184 @@
 \subsection{Weak coupling under periodic boundary conditions}
 \subsubsection{Swif-Hohenberg equation}
 We recall that \textit{Swift-Hohenberg equation} is a non-linear fourth order partial differential equation, defined as :
-\begin{equation}
+\begin{equation}\label{eq:SH4th}
    \frac{\partial \psi}{\partial t} = - \Gamma \frac{\delta \mathcal{F}}{\delta \psi} = - \Gamma \left[ \psi + f'(\psi) + \Delta^2 \psi +2 \Delta \psi  \right] \quad \text{with} \quad f(\psi) = -\frac{\epsilon}{2} \psi^2 - \frac{g}{3}\psi^3 + \frac{1}{4} \psi^4
 \end{equation}
 Several numerical methods have been proposed in the literature, trying to build a thermodynamically consistent and energy stable schemes while optimizing the computational costs.
-It is well known that a forward explicit euler scheme is unstable if the CFL-like conditions are not met $(\Delta t\sim < \Delta x^4)$. For this reason, a first semi-implicit method was proposed in \cite{chengEfficientAlgorithmSolving2008}, then this method was enhanced in \cite{elseySimpleEfficientScheme2013} where the authors added a stabilizing term to enforce energy stability. Following this, a second order Crank-Nicolson scheme was suggested in \cite{gomezNewSpaceTime2012} in combination with a Newton-Raphson method to adress the non linear scheme. Moreover, to deal with the non-linear term, different operator splitting methods were proposed, such as first and second order convex splitting \cite{huStableEfficientFinitedifference2009}. Finally, we refer to spectral method used in conjunction with these splitting methods (e.g \cite{leeSemianalyticalFourierSpectral2017}) and pseudo-spectral studied in \cite{zhaiStabilityErrorEstimate2021}.\\
+It is well known that a forward explicit euler scheme is unstable if the CFL-like conditions are not met $(\Delta t\sim < \Delta x^4)$. For this reason, a first semi-implicit method was proposed in \cite{chengEfficientAlgorithmSolving2008}, then this method was enhanced in \cite{elseySimpleEfficientScheme2013} where the authors added a stabilizing term to enforce energy stability. Following this, a second order Crank-Nicolson scheme was suggested in \cite{gomezNewSpaceTime2012} in combination with a Newton-Raphson method to adress the non linear scheme. Moreover, to deal with the non-linear term, different operator splitting methods were proposed, such as first and second order convex splitting \cite{huStableEfficientFinitedifference2009}. Finally, we refer to spectral method used in conjunction with these splitting methods (e.g \cite{leeSemianalyticalFourierSpectral2017}) and pseudo-spectral studied in \cite{zhaiStabilityErrorEstimate2021}.
+In what comes next, we follow the finite elements scheme suggested in \cite{qiNumericalAnalysisSecondorder2024}, based on the classically used mixed formulation of fourth order partial differential equations.\\
 
-In what comes next, we follow the finite elements scheme suggested in \cite{qiNumericalAnalysisSecondorder2024}, based on the classically used mixed formulation of fourth order partial differential equations.
+We consider a domain $\Omega$ with a given triangulation $\mathcal{T}_h$ such that $\Omega = \bigcup_{U \in \mathcal{T}_h} U$ with $h$ being the maximal length of the triangles. We consider the scalar finite element element functional space $V_h^q$ defined as:
+\begin{equation}
+   V_h^q = \left\{ f_h \in H^1_{prt}(\Omega) \: \vert \: f_{h|U} \in \mathcal{P}_q, \forall \: U \in \mathcal{T}_h \right\}
+\end{equation}
+Where, $H^1_{per}(\Omega)$ is the standard $H_1 = W^{s,p}$ Sobolev space with enforced periodic boundary conditions all around $\partial \Omega$. We recall that $H^1_{per}(\Omega)$ is equipped with the standard $L^2$ inner product which with denote by $\inner{\cdot}{\cdot}$. Finally, the space $\mathcal{P}_q$ denotes the space of degrees up to $q$.\\
+
+
+The continuous mixed formulation of the Swif-Hohenberg equation \cref{eq:SH4th}, is based on introducing a new function $\omega \in H^1_{per}(\Omega)$, such that $\omega = \Delta \psi$. The coupled system is thus:
+\begin{equation}
+   \begin{cases}
+      \cfrac{\partial \psi}{\partial t} =  -\Gamma \left[ \psi + f'(\psi) + \Delta \omega+2 \omega  \right] \\
+      \omega = \Delta \psi
+   \end{cases}
+\end{equation}
+To obtain the weak formulation of the previous coupled problem, we multiply the first equation with a test function $u_h \in V_h^q$, and the second one with $v_h \in V_h^q$.
+\begin{equation}\label{eq:mixed_init}
+   \begin{cases}
+      \inner{\partial_t\psi}{u_h}=  -\Gamma \left[ \inner{\psi + f'(\psi)}{u_h} + \inner{\Delta \omega}{u_h}+2 \inner{\omega}{u_h}  \right] \\
+      \inner{\omega}{v_h} = \inner{\Delta \psi}{v_h}
+   \end{cases}
+\end{equation}
+Using the divergence theorem we can get rid of the second order space derivatives as follows:
+\begin{equation}
+ \forall f, u_h \in H^1_{per}(\Omega) \quad \inner{\Delta f}{u_h} = - \inner{\nabla f}{ \nabla u_h} + \int_{\partial \Omega} u_h \nabla f \cdot \,dS
+\end{equation}
+The boundary term vanishes because of periodicity and we can formulate \cref{eq:mixed_init} as a semi-discretized weak problem:
+
+\begin{mybox}{}
+Find $\chi_h=(\psi_h,\omega_h)\in (V^q_h)^2$, such that :
+\begin{equation}
+   \forall \; u_h, v_h \in V^q_h  \quad   \begin{cases}
+      \inner{\partial_t\psi_h}{u_h}=  -\Gamma \left[ \inner{\psi_h + f'(\psi_h)}{u_h} -\inner{\nabla \omega_h}{ \nabla u_h} +2 \inner{\omega_h}{u_h}  \right] \\
+      \inner{\omega_h}{v_h} = -\inner{\nabla \psi_h}{ \nabla v_h} 
+   \end{cases}
+\end{equation}
+With known initial conditions $\psi_h^{t=0}$ and $\omega_h^{t=0}$.
+\end{mybox}
+The existence and uniquess of a solution for this semi-discretized scheme was proven in \cite{qiNumericalAnalysisSecondorder2024} using galerkin spectral method. In addition, the author studied and demonstrated the convergence of the scheme for $\mathcal{P}_1$ and $\mathcal{P}_2$ polynomial spaces.
+\newpage
+In order to introduce the fully discrete scheme, we use \emph{Crank-Nicolson} method to treat the time derivatives. An explicit Eulers scheme would require a time step roughly $dt<dx^4$, whereas a CN scheme is known for it's second order stability and allows for larger timesteps.
+
+\begin{mybox}{}
+   Find $\chi_h^{n+1}=(\psi_h^{n+1},\omega_h^{n+1})\in (V^q_h)^2$, given $\chi_h^{n}=(\psi_h^{n},\omega_h^{n})$, such that $\forall \; u_h, v_h \in V^q_h$ :
+   \begin{equation}\label{eq:uncoupled_FE}
+      \begin{cases}
+          \begin{aligned}
+              \inner{\psi_h^{n+1}}{u_h} = \inner{\psi_h^{n}}{u_h} 
+              - dt \Gamma \bigg[&
+                  \inner{\frac{\psi_h^{n+1} + f'(\psi_h^{n+1}) + \psi_h^{n} + f'(\psi_h^{n})}{2}}{u_h}- \inner{\frac{\nabla \omega_h^{n+1}+ \nabla \omega_h^{n}}{2}}{\nabla u_h}\\
+                  &+ 2 \inner{\frac{\omega_h^{n+1} + \omega_h^{n}}{2}}{u_h} 
+              \bigg]
+          \end{aligned} \\
+          \inner{\omega_h^{n+1}}{v_h} = -\inner{\nabla \psi_h^{n+1}}{\nabla v_h}
+      \end{cases}
+  \end{equation}
+Where $dt$ is the timestep. The problem requires an initialization $\psi_h^{t=0}$ and $\omega_h^{t=0}$.
+\end{mybox}
+This fully discretized scheme introduces a nonlinear term, due to the non linear nature of the function $f$. At each time iteration, this problem is tackeled using a Newton-Raphson iterative solver in conjunction with a Krylov solver for all the linear equation, as well as the Newton internal subiteration with a convergence critereon based on residuals. To go into details, the previous system in \cref{eq:uncoupled_FE} can compactly written as (we drop the $h$ subscript for convenience):
+\begin{equation}
+   \text{Given } \chi^n_h \text{,  Find } \chi^{n+1}_h,\text{ such that :} \quad F(\chi^{n+1}_h,\chi^{n}_h,u_h,v_h)=0 \quad \forall u_h,v_h \in V_h^q
+\end{equation}
+Within a finite-element approximation, we can assemble from the previous system \cref{eq:uncoupled_FE} a jacobian matrix $\mathcal{J}\left[\left(\chi^{n+1}_h\right)_{k}\right]$ as well as residual vector $F(\left(\chi^{n+1}_h\right)_{k})$ which easily set up our Newton iterative scheme. The subscript $k$ is linked to Newton's method internal iterations:
+\begin{equation}\label{eq:NewtonSH_FE_mixed}
+   \left(\chi^{n+1}_h\right)_{k+1}=\left(\chi^{n+1}_h\right)_{k}- \mathcal{J}\left[\left(\chi^{n+1}_h\right)_{k}\right]^{-1}F(\left(\chi^{n+1}_h\right)_{k})
+\end{equation}
+Which utimately defines a reccurent sequence to be iterated until convergence critereon is reached as determined by a given tolerance.
+\subsubsection{Mechanical problem}
+We recall that in this section we solve a uncoupled FDM-PFC model in which the evolution the evolution of the scalar field $\psi$ is independent of Mechanical state and is solely prescribed by the SH equation \cref{eq:SH4th}. As introduced in \cite{upadhyayCouplingPhase2024}, the scalar field $\psi$ can be used to extract a dislocation density tensor $\alpha$ which will be used to solve the Mechanical problem. In fact, within the weakly non linear region with $|\varepsilon|<\!<1$, the order parameter $\psi$ can be expanded in terms of the slow varying amplitudes of the resonant modes $\vecc{q_n}$ (\cite{skaugenDislocationdynamics2018}). We can write:
+\begin{equation}
+   \psi(\vecc{r},t) = \psi_0 + \sum_{n=1}^{N} A_n(\vecc{r},t) e^{i \vecc{q_n}\cdot \vecc{r}}+ c.c
+\end{equation}
+The phase information  included in the complex amplitudes $A_n$ is used to define a distorted configuration with respect to a perfect lattice. As a matter of fact, the slow varying amplitudes transforms the phase as $\theta_n \rightarrow \theta_n^0 -\vecc{q_n}\cdot \vecc{u}$, where $\vecc{u}$ is the displacement field (\cite{skogvollphasefield2022}):
+\begin{equation}
+   \vecc{u}(\vecc{r}) = - \frac{3}{Nq_0^2} \sum_{n=1}^{N} \vecc{q_n} \theta(\vecc{r})
+\end{equation}
+Accessing the complex amplitudes $A_n$ can be formulated as a demodulation problem that can be tackled through many techniques as we will list in the strongly coupled case. For now, we follow the method proposed in \cite{skogvollphasefield2022} based on coarse graining. We introduce a coarse graining operator $X \longmapsto \langle\: X \: \rangle$ defined as a convolution with a gaussian filter $\mathcal{G}$ having a length scale $a_0$. Let $X$ be a generic scalar field defined over the domain $\Omega$. It's corresponding coarse-grained value is
+\begin{equation}
+   \langle X\rangle(\vecc{r}) =  \frac{1}{(2\pi a_0^2)^{d/2}}\int_\Omega dr' X(\vecc{r})  \: e^{-\cfrac{||\vecc{r}-\vecc{r'}||^2}{2a_0^2}} = (X * \mathcal{G})(r)
+\end{equation}
+Due to the fact that the complex amplitudes $A_n$ vary on a length scale much larger than $a_0$, one can easily write: \marginpar{proof?}
+\begin{equation}
+   A_n(\mathbf{r}) \approx \langle \psi(\vecc{r}) e^{-i \vecc{q_n}\cdot \vecc{r}}\rangle
+\end{equation}
+The typical value of the gaussian kernel length scalr is $a_0=2\pi/q_0$ with $q_0$ being the characteristic wave vector length of a perfect reference lattice. The major advantage of this method is that it can be efficiently computed using fourier transform. In fact, since the Fourier transform of a gaussian kernel is still a gaussian kernel but with an inverse scale, we can define the kernel once in the fourier space:
+\begin{equation}
+   G(\vecc{r}) = \frac{1}{(2\pi a_0^2)^{d/2}} e^{-\cfrac{||\vecc{r}||^2}{2a_0^2}} \quad \Rightarrow \quad \tilde{\mathcal{G}} (\vecc{\xi})= \mathcal{F}[\mathcal{G}] = e^{-2a_0^2\pi^2||\vecc{\xi}||^2}
+\end{equation}
+Using this displacement field or equivalently the slow varying amplitudes, one can define a configurational distortion:
+\begin{equation}
+   \Tens{Q}(\vecc{r}) = -\frac{d}{N} \sum_{n=1}^{N} \vecc{q_n} \otimes \Im \left(\frac{\nabla A_n}{A_n}\right)
+\end{equation}
+An in analogy with linear elasticity, we define a configurational stress simply as : \marginpar{add $\sigma^\psi$ and compare}
+\begin{equation}
+   \Tens{\sigma}^{\Tens{Q}} = \mathbb{C}:\Tens Q
+\end{equation}
+As discussed in the first part, the phase field crystal support stable and isolated defects which can be accessed using phase singularties. With being said, the configurational distortion can be used to defined the phase field dislocation density tensor $\overline{\Tens\alpha}$:
+ \begin{equation}\label{eq:uncoupledalpha}
+   \overline{\Tens\alpha} = \nabla \times \Tens Q
+ \end{equation}
+
+Within the uncoupled model, this dislocation density can serve to formulate a static FDM problem. Find an elastic distortion field $\Tens U$ given a dislocation density tensor $\Tens \alpha$. This static FDM is solved using \emph{Stokes-Helmholtz} decomposition $\Tens U = \Tens{U^\perp}+\Tens{U^\parallel}$, with $\Tens{U^\parallel}$ being the compatible part satisfying $\nabla \times \Tens{U^\parallel}=0$ and  $\Tens{U^\perp}$ the incompatible one, verifying $\nabla \cdot \Tens{U\perp}=0$.\\
+The incompatible distortion $\Tens{U^\perp}$ is found by solving a \emph{Poisson}-type of equation:
+\begin{equation}
+   \nabla^2 \Tens{U^\perp} = - \nabla \times \Tens \alpha
+\end{equation}
+Under periodic assumptions, this can be simply solved by a spectral method (see \cite{upadhyayCouplingPhase2024}), with $\Tens{\tilde{\alpha}}= \mathcal{F}(\mathcal{\Tens \alpha})$ the Fourrier transform of the dislocation density tensor $\Tens \alpha$:
+\begin{equation}
+   \Tens{U^\perp} = \mathcal{F}^{-1}\left(
+      \begin{cases}
+         i\cfrac{(\Tens{\tilde{\alpha}}\cdot\Levi{})\cdot \vecc{k}}{|\vecc{k}|}&, \: |\vecc{k}|\neq 0\\
+         0&, \: |\vecc{k}|= 0\\
+      \end{cases}
+   \right)
+\end{equation}
+Where $\Levi{}$ is the third order \emph{Levi-Civita} tensor.\\
+
+
+The compatible part, however, is obtained using linear elasticity and the equilibrium condition:
+\begin{equation}
+   \nabla \cdot \Tens \sigma = 0 \quad \Rightarrow \quad \nabla \cdot(\mathbb{C}: \Tens{U^\parallel}) = -\nabla \cdot(\mathbb{C}: \Tens{U^\perp})
+\end{equation}
+Which can be also solved by means of spectral methods:
+\begin{equation}
+   \Tens{U^\parallel} = \mathcal{F}^{-1}\left( \tilde{\mathbb{G}} : \mathbb{C}:\tilde{\Tens{U^\perp}}\right)
+\end{equation}
+$\tilde{\mathbb{G}}$ being the fourth order modified Green's tensor defined in the Fourier space:
+
+\begin{equation}
+   \tilde{\mathbb{G}}_{ijkl} = \dots check \: MURA1987
+\end{equation}
+Finally, the mechanical stress can be deduced using constitutive law:
+\begin{equation}
+   \Tens{U} =\Tens{U^\perp} +\Tens{U^\parallel} \quad \Longrightarrow \quad \Tens{\sigma} = \mathbb{C}:\Tens U 
+\end{equation}
+
+The uncoupled model consist of solving the static FDM problem given the dislocation density as determined from configurational distortion $\overline{\Tens \alpha}$ as determined by the order parameter $\psi$, i.e we set $\Tens\alpha = \overline{\Tens \alpha}$. Withot any intercation or impact from the mechanics on the scalar field evolution.
+
+\subsubsection{Uncoupled case, numerical algorithm}
+The previously introduced numerical schee is implemented on the opensource FEM software \texttt{FEniCs} available as a frontend library under Python. All fourier transforms are performed using \texttt{numpy.fft} library. The following algorithm recapitulate the numerical procedure for solving the uncoupled PFC-FDM model.\\
+
+
+\RestyleAlgo{ruled}
+\begin{algorithm}[H]
+   \caption{Uncoupled PFC-FDM model}\label{alg:UncoupledPFCFDM}
+   \KwData{$\Omega,dx,dy,dt,\mathbb{C},\psi(t=0),g,\varepsilon,tol$}
+   \KwResult{$\Tens Q$,$\Tens U$,$\Tens{\sigma^Q}$,$\Tens \sigma$}
+   $t \gets 0$ \;
+   $\psi^0_h \gets \psi(t=0)$\;
+   $\omega^0_h \gets \Delta \psi^0$ \;
+   \While{$t<T$}{
+      $k=0$ \;
+      $\left(\chi^{t+dt}_h\right)_{k} \gets (\psi^{t}_h,\omega^{t}_h)$\;
+      FE assembly of $F(\left(\chi^{t+dt}\right)_{k})$ from \cref{eq:uncoupled_FE}\;
+      $res \gets ||F(\left(\chi^{t+dt}\right)_{k})|| $ \;
+      \While{$res>tol$}{
+         % FE assembly of $F(\left(\chi^{t+dt}\right)_{k})$ from \cref{eq:uncoupled_FE}\;
+         FE assembly of $\mathcal{J}\left[\left(\chi^{n+1}_h\right)_{k}\right]$ from \cref{eq:uncoupled_FE}\;
+         $\left(\chi^{t+dt}_h\right)_{k+1} \gets $ RHS of \cref{eq:NewtonSH_FE_mixed}\;
+         FE assembly of $F(\left(\chi^{t+dt}_h\right)_{k+1})$ from \cref{eq:uncoupled_FE}\;
+         $res \gets ||F(\left(\chi^{t+dt}_h\right)_{k+1})|| $ \;
+         $k \gets k+1$\;
+      }
+      $(\psi^{t}_h,\omega^{t}_h) \gets \left(\chi^{t+dt}_h\right)_{k}  $\;
+      $A_n^{t+dt} \gets$ ??\;
+      $\Tens{Q^{t+dt}} \gets$ ??\;
+      $\Tens{\sigma^Q} \gets$ ??\;
+      $\overline{\Tens{\alpha}}^{t+dt} \gets $ RHS of \cref{eq:uncoupledalpha}\;
+      $\Tens{\alpha}^{t+dt} \gets \overline{\Tens{\alpha}}^{t+dt}$ \;
+     $t \gets t+dt$\;
+   }
+\end{algorithm}
+
 \end{document}
+
